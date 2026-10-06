@@ -1,32 +1,27 @@
 Terraform `VictorOps/Splunk OnCall` Provider
-=========================
 
-- Website: https://www.terraform.io
-- [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
-- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
-
-<img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" width="600px">
+Reecetech fork of [splunk/terraform-provider-victorops](https://github.com/splunk/terraform-provider-victorops), based on the unmerged upstream [PR #21](https://github.com/splunk/terraform-provider-victorops/pull/21).
 
 Requirements
 ------------
 
 - A VictorOps/Splunk OnCall account with API access (API key and ID).
 - [Terraform](https://www.terraform.io/downloads.html) 0.13.x or higher
-- [Go](https://golang.org/doc/install) 1.21+ (to build the provider plugin)
+- [Go](https://golang.org/doc/install) 1.22+ (to build the provider plugin)
 
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/splunk/terraform-provider-victorops`
+Clone repository to: `$GOPATH/src/github.com/reecetech/terraform-provider-victorops`
 
 ```sh
-$ git clone git@github.com:splunk/terraform-provider-victorops.git $GOPATH/src/github.com/splunk/terraform-provider-victorops
+$ git clone git@github.com:reecetech/terraform-provider-victorops.git $GOPATH/src/github.com/reecetech/terraform-provider-victorops
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/splunk/terraform-provider-victorops
+$ cd $GOPATH/src/github.com/reecetech/terraform-provider-victorops
 $ go build -o terraform-provider-victorops
 ```
 
@@ -71,7 +66,7 @@ Usage
 terraform {
   required_providers {
     victorops = {
-      source  = "splunk/victorops"
+      source  = "reecetech/victorops"
       version = "~> 0.2.0"
     }
   }
@@ -231,7 +226,7 @@ data "victorops_user_devices" "jdane" {
 Developing the Provider
 ---------------------------
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.21+ is *required*).
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.22+ is *required*).
 
 To compile the provider:
 
@@ -267,7 +262,12 @@ API Rate Limiting
 
 The VictorOps API has a rate limit of approximately 2 requests per second. This provider implements automatic retry with exponential backoff for rate-limited requests (HTTP 429) and transient server errors (HTTP 500, 502, 503, 504).
 
+Releasing
+---------
+
+Push a `vX.Y.Z` tag. `.github/workflows/release.yml` runs GoReleaser, signs the checksums with the GPG key in repo secrets (`GPG_PRIVATE_KEY`, `PASSPHRASE`) and publishes the GitHub release. The Terraform Registry picks it up via webhook.
+
 License
 -------
 
-See [LICENSE](LICENSE) file.
+MPL-2.0, unchanged from upstream. See [LICENSE](LICENSE) file.
