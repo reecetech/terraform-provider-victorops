@@ -12,6 +12,7 @@ import (
 
 func resourceTeamMembership() *schema.Resource {
 	return &schema.Resource{
+		Description:   "Associates a user with a team in VictorOps/Splunk OnCall.",
 		CreateContext: resourceTeamMembershipCreate,
 		ReadContext:   resourceTeamMembershipRead,
 		UpdateContext: resourceTeamMembershipUpdate,

@@ -10,6 +10,7 @@ import (
 
 func resourceTeam() *schema.Resource {
 	return &schema.Resource{
+		Description:   "Manages a VictorOps/Splunk OnCall team, a collection of users with on-call rotations and escalation policies. Use `victorops_team_membership` to add members.",
 		CreateContext: resourceTeamCreate,
 		ReadContext:   resourceTeamRead,
 		UpdateContext: resourceTeamUpdate,

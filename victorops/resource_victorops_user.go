@@ -10,6 +10,7 @@ import (
 
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
+		Description:   "Manages a VictorOps/Splunk OnCall user. Set `replacement_user` (or the `VO_REPLACEMENT_USERNAME` env var) to a default username so the user can be deleted. Creating admin users is not supported, `is_admin` is deprecated and ignored.",
 		CreateContext: resourceUserCreate,
 		ReadContext:   resourceUserRead,
 		UpdateContext: resourceUserUpdate,

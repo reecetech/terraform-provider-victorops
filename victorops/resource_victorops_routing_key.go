@@ -10,6 +10,7 @@ import (
 
 func resourceRoutingKey() *schema.Resource {
 	return &schema.Resource{
+		Description:   "Manages a routing key, which routes incoming alerts to escalation policies. Deletion of routing keys is not supported.",
 		CreateContext: resourceRoutingKeyCreate,
 		ReadContext:   resourceRoutingKeyRead,
 		DeleteContext: resourceRoutingKeyDelete,

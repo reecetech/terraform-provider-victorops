@@ -56,7 +56,7 @@ lint: fmtcheck vet
 docs:
 	@echo "==> Generating documentation..."
 	@if command -v tfplugindocs >/dev/null 2>&1; then \
-		tfplugindocs generate; \
+		tfplugindocs generate --provider-name victorops --website-source-dir docs-templates; \
 	else \
 		echo "tfplugindocs not installed. Install with: go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest"; \
 	fi
