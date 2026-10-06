@@ -7,7 +7,7 @@ Requirements
 
 - A VictorOps/Splunk OnCall account with API access (API key and ID).
 - [Terraform](https://www.terraform.io/downloads.html) 0.13.x or higher
-- [Go](https://golang.org/doc/install) 1.22+ (to build the provider plugin)
+- [Go](https://golang.org/doc/install) 1.26+ (to build the provider plugin)
 
 Building The Provider
 ---------------------
@@ -226,7 +226,7 @@ data "victorops_user_devices" "jdane" {
 Developing the Provider
 ---------------------------
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.22+ is *required*).
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.26+ is *required*; `asdf install` uses `.tool-versions`).
 
 To compile the provider:
 
