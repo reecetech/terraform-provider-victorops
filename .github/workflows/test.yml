@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version-file: 'go.mod'
+          go-version-file: '.tool-versions'
           cache: true
       - run: go mod download
       - run: go build -v .
@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version-file: 'go.mod'
+          go-version-file: '.tool-versions'
           cache: true
       - name: Run gofmt
         run: |
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version-file: 'go.mod'
+          go-version-file: '.tool-versions'
           cache: true
       - run: go mod download
       - run: go test -v -short -timeout 120s ./...
