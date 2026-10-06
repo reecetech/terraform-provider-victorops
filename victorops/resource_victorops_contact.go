@@ -14,6 +14,7 @@ import (
 
 func resourceContact() *schema.Resource {
 	return &schema.Resource{
+		Description:   "Manages a contact (email or phone number) for a user. A phone contact must be verified manually in the web UI before it can be used in a paging policy.",
 		CreateContext: resourceContactCreate,
 		ReadContext:   resourceContactRead,
 		DeleteContext: resourceContactDelete,

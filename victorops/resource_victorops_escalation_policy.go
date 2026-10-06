@@ -14,6 +14,7 @@ import (
 
 func resourceEscalationPolicy() *schema.Resource {
 	return &schema.Resource{
+		Description:   "Manages a team escalation policy, which sets who is on-call for a team. Rotation group slugs must be fetched from the VictorOps public API (GET rotations). Update and delete may fail if they involve a routing key, which this provider cannot update or delete.",
 		CreateContext: resourceEscalationPolicyCreate,
 		ReadContext:   resourceEscalationPolicyRead,
 		DeleteContext: resourceEscalationPolicyDelete,
