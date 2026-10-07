@@ -1,5 +1,5 @@
-# This GitHub action can publish assets for release when a tag is created.
-# Currently its setup to run on any tag that matches the pattern "v*" (ie. v0.1.0).
+# On every push to master, tags the next calver version (vYYYY.M.N) and publishes it
+# with GoReleaser.
 #
 # This uses an action (paultyng/ghaction-import-gpg) that assumes you set your
 # private key in the `GPG_PRIVATE_KEY` secret and passphrase in the `PASSPHRASE`
@@ -12,26 +12,46 @@
 name: release
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
+
+concurrency: release
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Unshallow
-        run: git fetch --prune --unshallow
+        with:
+          fetch-depth: 0
+
+      # Calculate the next version and create a tag
+      - id: version
+        uses: reecetech/version-increment@2026.8.4
+        with:
+          scheme: calver
+
+      - name: Tag
+        run: |
+          git tag ${{ steps.version.outputs.v-version }}
+          git push origin ${{ steps.version.outputs.v-version }}
+
+      # Use Goreleaser to build and release the binaries on Github.
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
           go-version-file: '.tool-versions'
+
       - name: Import GPG key
         id: import_gpg
         uses: paultyng/ghaction-import-gpg@v2.1.0
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.PASSPHRASE }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
