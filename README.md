@@ -67,7 +67,7 @@ terraform {
   required_providers {
     victorops = {
       source  = "reecetech/victorops"
-      version = "~> 0.2.0"
+      version = "~> 2026.10.1"
     }
   }
 }
