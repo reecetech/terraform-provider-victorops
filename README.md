@@ -39,6 +39,7 @@ Using this VictorOps/Splunk OnCall Terraform provider, you can manage the follow
 | `victorops_team_membership` | Manage user-team assignments |
 | `victorops_escalation_policy` | Manage escalation policies |
 | `victorops_routing_key` | Manage routing keys |
+| `victorops_rotation` | Manage rotation groups and their shifts |
 | `victorops_user_contact_email` | Manage user email contact methods |
 | `victorops_user_contact_phone` | Manage user phone contact methods |
 | `victorops_alert_rule` | Manage alert routing rules |
@@ -54,7 +55,7 @@ Using this VictorOps/Splunk OnCall Terraform provider, you can manage the follow
 | `victorops_routing_keys` | List routing keys |
 | `victorops_team_admins` | List team administrators |
 | `victorops_user_devices` | List user contact devices (read-only) |
-| `victorops_rotations` | List team rotations |
+| `victorops_rotations` | List team rotations and rotation group slugs |
 | `victorops_team_oncall_schedule` | Get team on-call schedule |
 
 Usage

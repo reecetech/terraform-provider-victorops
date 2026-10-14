@@ -3,12 +3,12 @@
 page_title: "victorops_rotations Data Source - victorops"
 subcategory: ""
 description: |-
-  Get a team's rotations. Note: Rotations are read-only via the API.
+  Get a team's rotations and rotation group slugs. Use the `victorops_rotation` resource to manage them.
 ---
 
 # victorops_rotations (Data Source)
 
-Get a team's rotations. Note: Rotations are read-only via the API.
+Get a team's rotations and rotation group slugs. Use the `victorops_rotation` resource to manage them.
 
 ## Example Usage
 
@@ -27,8 +27,19 @@ data "victorops_rotations" "platform" {
 
 ### Read-Only
 
+- `groups` (List of Object) The team's rotation groups. (see [below for nested schema](#nestedatt--groups))
 - `id` (String) The ID of this resource.
 - `rotations` (List of Object) The rotations for the team. (see [below for nested schema](#nestedatt--rotations))
+
+<a id="nestedatt--groups"></a>
+### Nested Schema for `groups`
+
+Read-Only:
+
+- `group_id` (Number) The numeric rotation group ID.
+- `label` (String) The name of the rotation group.
+- `slug` (String) The rotation group slug (`rtg-...`), used in escalation policy entries.
+
 
 <a id="nestedatt--rotations"></a>
 ### Nested Schema for `rotations`

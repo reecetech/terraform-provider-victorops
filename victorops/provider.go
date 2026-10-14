@@ -45,6 +45,7 @@ func Provider() *schema.Provider {
 			"victorops_maintenance_mode":   resourceMaintenanceMode(),
 			"victorops_alert_rule":         resourceAlertRule(),
 			"victorops_user_paging_policy": resourceUserPagingPolicy(),
+			"victorops_rotation":           resourceRotation(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"victorops_team_oncall_schedule": dataSourceTeamOncallSchedule(),
