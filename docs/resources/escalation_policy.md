@@ -3,12 +3,12 @@
 page_title: "victorops_escalation_policy Resource - victorops"
 subcategory: ""
 description: |-
-  Manages a team escalation policy, which sets who is on-call for a team. Rotation group slugs must be fetched from the VictorOps public API (GET rotations). Update and delete may fail if they involve a routing key, which this provider cannot update or delete.
+  Manages a team escalation policy, which sets who is on-call for a team. Steps can be changed in place; the name and team cannot. Deleting a policy also deletes routing keys that only target it.
 ---
 
 # victorops_escalation_policy (Resource)
 
-Manages a team escalation policy, which sets who is on-call for a team. Rotation group slugs must be fetched from the VictorOps public API (GET rotations). Update and delete may fail if they involve a routing key, which this provider cannot update or delete.
+Manages a team escalation policy, which sets who is on-call for a team. Steps can be changed in place; the name and team cannot. Deleting a policy also deletes routing keys that only target it.
 
 ## Example Usage
 

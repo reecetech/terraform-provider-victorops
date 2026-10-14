@@ -14,9 +14,10 @@ import (
 
 func resourceEscalationPolicy() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manages a team escalation policy, which sets who is on-call for a team. Rotation group slugs must be fetched from the VictorOps public API (GET rotations). Update and delete may fail if they involve a routing key, which this provider cannot update or delete.",
+		Description:   "Manages a team escalation policy, which sets who is on-call for a team. Steps can be changed in place; the name and team cannot. Deleting a policy also deletes routing keys that only target it.",
 		CreateContext: resourceEscalationPolicyCreate,
 		ReadContext:   resourceEscalationPolicyRead,
+		UpdateContext: resourceEscalationPolicyUpdate,
 		DeleteContext: resourceEscalationPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceEscalationPolicyImport,
@@ -39,13 +40,11 @@ func resourceEscalationPolicy() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				ForceNew:    true,
 				Description: "Whether to ignore custom paging policies when this policy is triggered.",
 			},
 			"step": {
 				Type:        schema.TypeList,
 				Required:    true,
-				ForceNew:    true,
 				Description: "The escalation steps for this policy.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -53,20 +52,17 @@ func resourceEscalationPolicy() *schema.Resource {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Default:     0,
-							ForceNew:    true,
 							Description: "The timeout in minutes before escalating to the next step.",
 						},
 						"entries": {
 							Type:        schema.TypeList,
 							Required:    true,
-							ForceNew:    true,
 							Description: "The entries (targets) for this escalation step.",
 							Elem: &schema.Schema{
 								Type: schema.TypeMap,
 								Elem: &schema.Schema{
 									Type:         schema.TypeString,
 									Required:     true,
-									ForceNew:     true,
 									ValidateFunc: validation.StringInSlice([]string{"user", "email", "rotationGroup", "rotationGroupNext", "rotationGroupPrevious", "webhook", "targetPolicy"}, true),
 								},
 							},
@@ -148,6 +144,8 @@ func generateEscalationPolicyFromResourceData(d *schema.ResourceData) (*victorop
 					},
 				}
 				entryList = append(entryList, entry)
+			default:
+				return nil, fmt.Errorf("unsupported entry type %q; expected user, email, rotationGroup, rotationGroupNext, rotationGroupPrevious, webhook or targetPolicy", t)
 			}
 		}
 
@@ -225,7 +223,56 @@ func resourceEscalationPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
+	if err := d.Set("step", flattenEscalationPolicySteps(escalationPolicy.Steps)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return diags
+}
+
+func resourceEscalationPolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	config := m.(Config)
+	apiClient := NewAPIClient(config.BaseURL, config.APIId, config.APIKey)
+
+	ep, err := generateEscalationPolicyFromResourceData(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := apiClient.UpdateEscalationPolicy(d.Id(), ep.IgnoreCustomPagingPolicies, ep.Steps); err != nil {
+		return diag.FromErr(err)
+	}
+	return resourceEscalationPolicyRead(ctx, d, m)
+}
+
+// flattenEscalationPolicySteps is the inverse of generateEscalationPolicyFromResourceData
+func flattenEscalationPolicySteps(steps []victorops.EscalationPolicySteps) []interface{} {
+	out := make([]interface{}, len(steps))
+	for i, s := range steps {
+		entries := make([]interface{}, len(s.Entries))
+		for j, e := range s.Entries {
+			switch e.ExecutionType {
+			case "user":
+				entries[j] = map[string]interface{}{"type": "user", "username": e.User["username"]}
+			case "email":
+				entries[j] = map[string]interface{}{"type": "email", "address": e.Email["address"]}
+			case "rotation_group":
+				entries[j] = map[string]interface{}{"type": "rotationGroup", "slug": e.RotationGroup["slug"]}
+			case "rotation_group_next":
+				entries[j] = map[string]interface{}{"type": "rotationGroupNext", "slug": e.RotationGroup["slug"]}
+			case "rotation_group_previous":
+				entries[j] = map[string]interface{}{"type": "rotationGroupPrevious", "slug": e.RotationGroup["slug"]}
+			case "webhook":
+				entries[j] = map[string]interface{}{"type": "webhook", "slug": e.Webhook["slug"]}
+			case "policy_routing":
+				entries[j] = map[string]interface{}{"type": "targetPolicy", "slug": e.TargetPolicy["policySlug"]}
+			default:
+				// e.g. team_page, which the provider cannot create; kept so the difference shows
+				entries[j] = map[string]interface{}{"type": e.ExecutionType}
+			}
+		}
+		out[i] = map[string]interface{}{"timeout": s.Timeout, "entries": entries}
+	}
+	return out
 }
 
 func resourceEscalationPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
