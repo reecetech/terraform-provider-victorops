@@ -9,7 +9,7 @@ import (
 
 func dataSourceRotations() *schema.Resource {
 	return &schema.Resource{
-		Description: "Get a team's rotations. Note: Rotations are read-only via the API.",
+		Description: "Get a team's rotations and rotation group slugs. Use the `victorops_rotation` resource to manage them.",
 		ReadContext: dataSourceRotationsRead,
 
 		Schema: map[string]*schema.Schema{
@@ -17,6 +17,30 @@ func dataSourceRotations() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The slug/ID of the team.",
+			},
+			"groups": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The team's rotation groups.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"slug": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The rotation group slug (`rtg-...`), used in escalation policy entries.",
+						},
+						"group_id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "The numeric rotation group ID.",
+						},
+						"label": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The name of the rotation group.",
+						},
+					},
+				},
 			},
 			"rotations": {
 				Type:        schema.TypeList,
@@ -371,6 +395,18 @@ func dataSourceRotationsRead(ctx context.Context, d *schema.ResourceData, m inte
 	}
 
 	if err := d.Set("rotations", rotationList); err != nil {
+		return diag.FromErr(err)
+	}
+
+	items, err := apiClient.ListRotationGroups(teamID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	groups := make([]map[string]interface{}, len(items))
+	for i, g := range items {
+		groups[i] = map[string]interface{}{"slug": g.Slug, "group_id": int(g.GroupID), "label": g.Label}
+	}
+	if err := d.Set("groups", groups); err != nil {
 		return diag.FromErr(err)
 	}
 
