@@ -10,9 +10,10 @@ import (
 
 func resourceRoutingKey() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manages a routing key, which routes incoming alerts to escalation policies. Deletion of routing keys is not supported.",
+		Description:   "Manages a routing key, which routes incoming alerts to escalation policies. The default routing key cannot be updated or deleted.",
 		CreateContext: resourceRoutingKeyCreate,
 		ReadContext:   resourceRoutingKeyRead,
+		UpdateContext: resourceRoutingKeyUpdate,
 		DeleteContext: resourceRoutingKeyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -22,13 +23,11 @@ func resourceRoutingKey() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
-				Description: "The name of the routing key.",
+				Description: "The name of the routing key. Changing it renames the key.",
 			},
 			"targets": {
 				Type:        schema.TypeList,
 				Required:    true,
-				ForceNew:    true,
 				Description: "A list of escalation policy slugs to route alerts to.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -111,6 +110,31 @@ func resourceRoutingKeyRead(ctx context.Context, d *schema.ResourceData, m inter
 	return diags
 }
 
+func resourceRoutingKeyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	config := m.(Config)
+	apiClient := NewAPIClient(config.BaseURL, config.APIId, config.APIKey)
+
+	oldName, newName := d.Id(), d.Get("name").(string)
+	t := d.Get("targets").([]interface{})
+	targets := make([]string, len(t))
+	for i := range t {
+		targets[i] = t[i].(string)
+	}
+
+	if err := apiClient.UpdateRoutingKey(oldName, newName, targets); err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(newName)
+	return resourceRoutingKeyRead(ctx, d, m)
+}
+
 func resourceRoutingKeyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return diag.Errorf("deleting routing keys is not supported by the VictorOps API. Please delete in the UI and remove from Terraform state using 'terraform state rm'")
+	config := m.(Config)
+	apiClient := NewAPIClient(config.BaseURL, config.APIId, config.APIKey)
+
+	if err := apiClient.DeleteRoutingKey(d.Id()); err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId("")
+	return nil
 }

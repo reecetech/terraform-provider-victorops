@@ -3,12 +3,12 @@
 page_title: "victorops_routing_key Resource - victorops"
 subcategory: ""
 description: |-
-  Manages a routing key, which routes incoming alerts to escalation policies. Deletion of routing keys is not supported.
+  Manages a routing key, which routes incoming alerts to escalation policies. The default routing key cannot be updated or deleted.
 ---
 
 # victorops_routing_key (Resource)
 
-Manages a routing key, which routes incoming alerts to escalation policies. Deletion of routing keys is not supported.
+Manages a routing key, which routes incoming alerts to escalation policies. The default routing key cannot be updated or deleted.
 
 ## Example Usage
 
@@ -24,7 +24,7 @@ resource "victorops_routing_key" "platform_alerts" {
 
 ### Required
 
-- `name` (String) The name of the routing key.
+- `name` (String) The name of the routing key. Changing it renames the key.
 - `targets` (List of String) A list of escalation policy slugs to route alerts to.
 
 ### Read-Only
