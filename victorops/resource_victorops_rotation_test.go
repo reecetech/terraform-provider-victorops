@@ -67,7 +67,7 @@ func TestRotationShiftRoundTrip(t *testing.T) {
 		"time_range": []interface{}{map[string]interface{}{"start_hour": 9, "start_minute": 0, "end_hour": 17, "end_minute": 30}},
 	}}
 	in := map[string]interface{}{
-		"shift_id": 3, "label": "Days", "timezone": "Australia/Sydney", "start": 1700000000000, "duration": 7, "shift_type": "std",
+		"shift_id": 3, "label": "Days", "timezone": "Australia/Sydney", "start": "2024-01-01T11:00:00+11:00", "duration": 7, "shift_type": "std",
 		"usernames": []interface{}{"a", "b"}, "mask": weekdays, "mask2": []interface{}{}, "mask3": []interface{}{},
 	}
 
@@ -77,7 +77,7 @@ func TestRotationShiftRoundTrip(t *testing.T) {
 	}
 
 	flat := flattenShifts([]RotationShift{{
-		RotID: 3, Label: "Days", Timezone: "Australia/Sydney", Start: 1700000000000, Duration: 7, Shifttype: "std",
+		RotID: 3, Label: "Days", Timezone: "Australia/Sydney", Start: 1704067200000, Duration: 7, Shifttype: "std",
 		Usernames: []string{"a", "b"}, Mask: got.Mask, Mask2: &ShiftMask{},
 	}})
 	if !reflect.DeepEqual(flat[0], in) {
@@ -86,12 +86,32 @@ func TestRotationShiftRoundTrip(t *testing.T) {
 }
 
 func TestValidateShiftStart(t *testing.T) {
-	if _, errs := validateShiftStart(1704067200000, "start"); len(errs) != 0 {
+	if _, errs := validateShiftStart("2024-01-01T09:00:00+11:00", "start"); len(errs) != 0 {
 		t.Errorf("past start rejected: %v", errs)
 	}
-	future := int(time.Now().Add(24 * time.Hour).UnixMilli())
-	if _, errs := validateShiftStart(future, "start"); len(errs) != 1 {
+	if _, errs := validateShiftStart(time.Now().Add(24*time.Hour).Format(time.RFC3339), "start"); len(errs) != 1 {
 		t.Errorf("future start accepted")
+	}
+	if _, errs := validateShiftStart("1704067200000", "start"); len(errs) != 1 {
+		t.Errorf("epoch accepted")
+	}
+}
+
+func TestSameInstant(t *testing.T) {
+	if !sameInstant("", "2024-01-01T00:00:00Z", "2024-01-01T11:00:00+11:00", nil) {
+		t.Error("same instant not equal")
+	}
+	if sameInstant("", "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", nil) {
+		t.Error("different instants equal")
+	}
+}
+
+func TestFormatShiftStart(t *testing.T) {
+	if got := formatShiftStart(1704067200000, "Australia/Sydney"); got != "2024-01-01T11:00:00+11:00" {
+		t.Errorf("got %s", got)
+	}
+	if got := formatShiftStart(1704067200000, "not/a-zone"); got != "2024-01-01T00:00:00Z" {
+		t.Errorf("got %s", got)
 	}
 }
 
@@ -130,7 +150,7 @@ func TestSyncShifts(t *testing.T) {
 	c, calls := recorder(t)
 	shift := func(id int, label string, users ...interface{}) interface{} {
 		return map[string]interface{}{
-			"shift_id": id, "label": label, "timezone": "UTC", "start": 1, "duration": 7, "shift_type": "std",
+			"shift_id": id, "label": label, "timezone": "UTC", "start": "2024-01-01T00:00:00Z", "duration": 7, "shift_type": "std",
 			"usernames": users, "mask2": []interface{}{}, "mask3": []interface{}{},
 			"mask": []interface{}{map[string]interface{}{
 				"sunday": false, "monday": true, "tuesday": false, "wednesday": false, "thursday": false, "friday": false, "saturday": false,
@@ -216,7 +236,7 @@ resource "victorops_rotation" "test" {
   shift {
     label      = "Weekdays"
     timezone   = "UTC"
-    start      = 1704067200000
+    start      = "2024-01-01T00:00:00Z"
     duration   = 7
     shift_type = "std"
     usernames  = [%q]

@@ -20,8 +20,8 @@ resource "victorops_rotation" "primary" {
   shift {
     label      = "Weekdays"
     timezone   = "Australia/Sydney"
-    start      = 1704067200000 # epoch milliseconds, not in the future
-    duration   = 7             # days per turn
+    start      = "2024-01-01T09:00:00+11:00" # not in the future
+    duration   = 7                           # days per turn
     shift_type = "std"
     usernames  = ["jdane", "asmith"]
 
@@ -80,7 +80,7 @@ Required:
 - `label` (String) The name of the shift.
 - `mask` (Block List, Min: 1, Max: 1) When the shift is on call. (see [below for nested schema](#nestedblock--shift--mask))
 - `shift_type` (String) One of `std` (Standard), `fts` (Follow The Sun), `cstm` (Custom), `pho` (Period Hand Off).
-- `start` (Number) When the shift began, in epoch milliseconds. Must not be in the future: the API answers 500.
+- `start` (String) When the shift began, as an RFC 3339 timestamp (e.g. '2024-01-01T09:00:00+11:00'). Each person's turn is counted from here. Must not be in the future: the API answers 500.
 - `timezone` (String) The shift's timezone (e.g. 'Australia/Sydney').
 
 Optional:

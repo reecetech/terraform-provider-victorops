@@ -105,10 +105,11 @@ func resourceRotation() *schema.Resource {
 						Description:  "The shift's timezone (e.g. 'Australia/Sydney').",
 					},
 					"start": {
-						Type:         schema.TypeInt,
-						Required:     true,
-						ValidateFunc: validateShiftStart,
-						Description:  "When the shift began, in epoch milliseconds. Must not be in the future: the API answers 500.",
+						Type:             schema.TypeString,
+						Required:         true,
+						ValidateFunc:     validateShiftStart,
+						DiffSuppressFunc: sameInstant,
+						Description:      "When the shift began, as an RFC 3339 timestamp (e.g. '2024-01-01T09:00:00+11:00'). Each person's turn is counted from here. Must not be in the future: the API answers 500.",
 					},
 					"duration": {
 						Type:         schema.TypeInt,
@@ -137,12 +138,36 @@ func resourceRotation() *schema.Resource {
 	}
 }
 
-// validateShiftStart rejects future starts, which the API fails with a 500
+// validateShiftStart rejects unparseable and future starts, which the API fails with a 500
 func validateShiftStart(v interface{}, key string) ([]string, []error) {
-	if ms := int64(v.(int)); ms > time.Now().UnixMilli() {
-		return nil, []error{fmt.Errorf("%s must not be in the future (got %d); VictorOps returns a 500 for it", key, ms)}
+	t, err := time.Parse(time.RFC3339, v.(string))
+	if err != nil {
+		return nil, []error{fmt.Errorf("%s must be an RFC 3339 timestamp such as 2024-01-01T09:00:00+11:00: %s", key, err)}
+	}
+	if t.After(time.Now()) {
+		return nil, []error{fmt.Errorf("%s must not be in the future (got %s); VictorOps returns a 500 for it", key, v)}
 	}
 	return nil, nil
+}
+
+// sameInstant treats two spellings of one moment (2024-01-01T00:00:00Z and ...+11:00) as equal
+func sameInstant(_, old, new string, _ *schema.ResourceData) bool {
+	o, err1 := time.Parse(time.RFC3339, old)
+	n, err2 := time.Parse(time.RFC3339, new)
+	return err1 == nil && err2 == nil && o.Equal(n)
+}
+
+// formatShiftStart renders epoch milliseconds in the shift's timezone
+func formatShiftStart(ms int64, timezone string) string {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		loc = time.UTC
+	}
+	layout := time.RFC3339
+	if ms%1000 != 0 {
+		layout = time.RFC3339Nano
+	}
+	return time.UnixMilli(ms).In(loc).Format(layout)
 }
 
 func parseRotationID(id string) (team string, groupID int, err error) {
@@ -227,10 +252,11 @@ func expandUsernames(raw interface{}) []string {
 }
 
 func expandShift(m map[string]interface{}) RotationShiftPayload {
+	start, _ := time.Parse(time.RFC3339, m["start"].(string)) // checked by validateShiftStart
 	return RotationShiftPayload{
 		Label:     m["label"].(string),
 		Timezone:  m["timezone"].(string),
-		Start:     int64(m["start"].(int)),
+		Start:     start.UnixMilli(),
 		Duration:  m["duration"].(int),
 		Shifttype: m["shift_type"].(string),
 		Mask:      expandMask(m["mask"].([]interface{})),
@@ -259,7 +285,7 @@ func flattenShifts(shifts []RotationShift) []interface{} {
 			"shift_id":   s.RotID,
 			"label":      s.Label,
 			"timezone":   s.Timezone,
-			"start":      int(s.Start),
+			"start":      formatShiftStart(s.Start, s.Timezone),
 			"duration":   s.Duration,
 			"shift_type": s.Shifttype,
 			"usernames":  usernames,

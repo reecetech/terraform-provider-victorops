@@ -5,8 +5,8 @@ resource "victorops_rotation" "primary" {
   shift {
     label      = "Weekdays"
     timezone   = "Australia/Sydney"
-    start      = 1704067200000 # epoch milliseconds, not in the future
-    duration   = 7             # days per turn
+    start      = "2024-01-01T09:00:00+11:00" # not in the future
+    duration   = 7                           # days per turn
     shift_type = "std"
     usernames  = ["jdane", "asmith"]
 
