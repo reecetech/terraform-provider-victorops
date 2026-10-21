@@ -14,7 +14,7 @@ import (
 
 func resourceEscalationPolicy() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manages a team escalation policy, which sets who is on-call for a team. Steps can be changed in place; the name and team cannot. Deleting a policy also deletes routing keys that only target it.",
+		Description:   "Manages a team escalation policy, which sets who is on-call for a team. Steps can be changed in place, and may be empty; the name and team cannot be changed. Deleting a policy also deletes routing keys that only target it.",
 		CreateContext: resourceEscalationPolicyCreate,
 		ReadContext:   resourceEscalationPolicyRead,
 		UpdateContext: resourceEscalationPolicyUpdate,
@@ -44,8 +44,8 @@ func resourceEscalationPolicy() *schema.Resource {
 			},
 			"step": {
 				Type:        schema.TypeList,
-				Required:    true,
-				Description: "The escalation steps for this policy.",
+				Optional:    true,
+				Description: "The escalation steps for this policy. A policy with none pages nobody, e.g. one that only feeds a chat integration.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"timeout": {
