@@ -58,3 +58,26 @@ func TestPolicyUnsupportedEntryType(t *testing.T) {
 		t.Fatal("expected an error for an unsupported type")
 	}
 }
+
+func TestPolicyWithoutSteps(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, resourceEscalationPolicy().Schema, map[string]interface{}{"name": "p", "team_id": "t"})
+	ep, err := generateEscalationPolicyFromResourceData(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Must marshal as [], not null, which the API rejects
+	if ep.Steps == nil || len(ep.Steps) != 0 {
+		t.Fatalf("got %#v", ep.Steps)
+	}
+	if got := flattenEscalationPolicySteps(nil); len(got) != 0 {
+		t.Fatalf("got %#v", got)
+	}
+
+	c, calls := recorder(t)
+	if err := c.UpdateEscalationPolicy("pol-1", false, ep.Steps); err != nil {
+		t.Fatal(err)
+	}
+	if got := calls(); len(got) != 1 || got[0] != "PUT /api-public/v1/policies/pol-1 map[ignoreCustomPagingPolicies:false steps:[]]" {
+		t.Fatalf("got %q", got)
+	}
+}

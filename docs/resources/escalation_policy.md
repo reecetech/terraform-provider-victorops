@@ -3,12 +3,12 @@
 page_title: "victorops_escalation_policy Resource - victorops"
 subcategory: ""
 description: |-
-  Manages a team escalation policy, which sets who is on-call for a team. Steps can be changed in place; the name and team cannot. Deleting a policy also deletes routing keys that only target it.
+  Manages a team escalation policy, which sets who is on-call for a team. Steps can be changed in place, and may be empty; the name and team cannot be changed. Deleting a policy also deletes routing keys that only target it.
 ---
 
 # victorops_escalation_policy (Resource)
 
-Manages a team escalation policy, which sets who is on-call for a team. Steps can be changed in place; the name and team cannot. Deleting a policy also deletes routing keys that only target it.
+Manages a team escalation policy, which sets who is on-call for a team. Steps can be changed in place, and may be empty; the name and team cannot be changed. Deleting a policy also deletes routing keys that only target it.
 
 ## Example Usage
 
@@ -45,12 +45,12 @@ resource "victorops_escalation_policy" "high_severity" {
 ### Required
 
 - `name` (String) The name of the escalation policy.
-- `step` (Block List, Min: 1) The escalation steps for this policy. (see [below for nested schema](#nestedblock--step))
 - `team_id` (String) The slug/ID of the team this policy belongs to.
 
 ### Optional
 
 - `ignore_custom_paging_policies` (Boolean) Whether to ignore custom paging policies when this policy is triggered.
+- `step` (Block List) The escalation steps for this policy. A policy with none pages nobody, e.g. one that only feeds a chat integration. (see [below for nested schema](#nestedblock--step))
 
 ### Read-Only
 
